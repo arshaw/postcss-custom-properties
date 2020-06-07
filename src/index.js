@@ -7,6 +7,7 @@ import writeCustomPropertiesToExports from './lib/write-custom-properties-to-exp
 export default postcss.plugin('postcss-custom-properties', opts => {
 	// whether to preserve custom selectors and rules using them
 	const preserve = 'preserve' in Object(opts) ? Boolean(opts.preserve) : true;
+	const preserveWithFallback = 'preserveWithFallback' in Object(opts) ? Boolean(opts.preserveWithFallback) : false;
 
 	// sources to import custom selectors from
 	const importFrom = [].concat(Object(opts).importFrom || []);
@@ -21,7 +22,7 @@ export default postcss.plugin('postcss-custom-properties', opts => {
 	const syncTransform = root => {
 		const customProperties = getCustomPropertiesFromRoot(root, { preserve });
 
-		transformProperties(root, customProperties, { preserve });
+		transformProperties(root, customProperties, { preserve, preserveWithFallback });
 	};
 
 	// asynchronous transform
@@ -34,7 +35,7 @@ export default postcss.plugin('postcss-custom-properties', opts => {
 
 		await writeCustomPropertiesToExports(customProperties, exportTo);
 
-		transformProperties(root, customProperties, { preserve });
+		transformProperties(root, customProperties, { preserve, preserveWithFallback });
 	};
 
 	// whether to return synchronous function if no asynchronous operations are requested

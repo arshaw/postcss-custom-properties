@@ -20,6 +20,11 @@ export default (root, customProperties, opts) => {
 						beforeDecl.raws.value.value = beforeDecl.value.replace(trailingCommentRegExp, '$1');
 						beforeDecl.raws.value.raw = beforeDecl.raws.value.value + beforeDecl.raws.value.raw.replace(trailingCommentRegExp, '$2');
 					}
+
+					if (opts.preserveWithFallback) {
+						decl.value = injectFallbacks(originalValue, customProperties)
+					}
+
 				} else {
 					decl.value = value;
 
@@ -45,3 +50,15 @@ const isTransformableDecl = decl => !customPropertyRegExp.test(decl.prop) && cus
 // whether the declaration has a trailing comment
 const hasTrailingComment = decl => 'value' in Object(Object(decl.raws).value) && 'raw' in decl.raws.value && trailingCommentRegExp.test(decl.raws.value.raw);
 const trailingCommentRegExp = /^([\W\w]+)(\s*\/\*[\W\w]+?\*\/)$/;
+
+// converts a string from something like
+// "var(--something)" to "var(--something, originalValue)"
+// this should really be dome with the AST
+function injectFallbacks(valueString, fallbackProperties) {
+	return valueString.replace(/(var\(\s*)([\w-]+)(\s*\))/g, function(all, intro, varName, outro) {
+		if (varName in fallbackProperties) {
+			return intro + `${varName}, ${fallbackProperties[varName]}` + outro
+		}
+		return all
+	})
+}
